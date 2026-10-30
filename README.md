@@ -5,7 +5,7 @@
 SeismoPulse measures **pulse transit time (PTT)**: the delay between the **aortic valve opening**, felt as a tiny chest vibration by an MPU-6050 accelerometer on the sternum (a *seismocardiogram*, SCG), and the **arrival of the pulse at the fingertip**, seen by a PPG pulse sensor. Arteries stiffen as pressure rises, so the pulse travels faster and PTT gets shorter. After a quick cuff calibration, an Arduino Nano turns every beat into a **mean-arterial-pressure trend**, plus heart rate and HRV (RMSSD), entirely on-device.
 
 > 23MAT204 Lab Exam (Amrita Vishwa Vidyapeetham, School of AI): affordable healthcare edge-AI device using only the approved kit.
-> Author: **C Saihardhik Reddy** (CB.AI.U4AID25112), Section B, Group B8.
+> Authors: **C Saihardhik Reddy** (CB.AI.U4AID25112) and **R Gagan Chowdary** (roll no. ending 145), Section B, Group B8.
 > Educational prototype. **Not a medical device**: it reports trends, not diagnoses.
 
 ![PTT](docs/fig_waveforms.png)
