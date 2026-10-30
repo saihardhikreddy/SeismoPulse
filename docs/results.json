@@ -1,0 +1,43 @@
+{
+ "SeismoPulse_SCG_PTT/one_point": {
+  "MAE_mmHg": 4.23,
+  "bias": -0.94,
+  "SD": 4.81,
+  "r": 0.961,
+  "slope_b": -55.0
+ },
+ "SeismoPulse_SCG_PTT/two_point": {
+  "MAE_mmHg": 2.88,
+  "bias": 2.7,
+  "SD": 2.26,
+  "r": 0.96,
+  "slope_b": -123.0
+ },
+ "ECG_style_PAT/one_point": {
+  "MAE_mmHg": 3.6,
+  "bias": 0.03,
+  "SD": 4.25,
+  "r": 0.956,
+  "slope_b": -55.0
+ },
+ "ECG_style_PAT/two_point": {
+  "MAE_mmHg": 3.44,
+  "bias": 3.33,
+  "SD": 2.38,
+  "r": 0.956,
+  "slope_b": -101.3
+ },
+ "beats_true": 2287,
+ "beats_detected": 2318,
+ "SQI_pass_rate": 0.979,
+ "PTT_constant_offset_ms": 39.1,
+ "PTT_jitter_ms_SD_after_offset": 3.87,
+ "PEP_range_ms": [
+  74.2,
+  114.5
+ ],
+ "MAP_range_true": [
+  86.6,
+  113.6
+ ]
+}
