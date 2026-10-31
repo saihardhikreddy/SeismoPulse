@@ -118,7 +118,7 @@ It then runs a **port of the firmware pipeline**. A conventional **ECG-style PAT
 ### Run it
 
 ```bash
-pip install numpy scipy matplotlib
+pip install -r sim/requirements.txt
 python sim/seismopulse_sim.py        # writes docs/fig_*.png and docs/results.json
 ```
 
