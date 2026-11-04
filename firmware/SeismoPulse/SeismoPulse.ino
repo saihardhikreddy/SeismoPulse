@@ -110,13 +110,17 @@ void onBeat(uint32_t footIdx) {
     int16_t v = scgBuf[(bufHead + BUF_N - 1 - lagSamples - k) % BUF_N];
     if (v > best) { best = v; bestK = k; }
   }
-  if (bestK < 0) return;
+  if (bestK < 0) { rrPrev = 0; return; }
   float ptt = bestK * (1000.0f / FS);
 
   // signal-quality index: physiological ranges + beat-to-beat consistency
   bool ok = rr >= RR_MIN_MS && rr <= RR_MAX_MS && ptt > PTT_MIN_MS && ptt < PTT_MAX_MS;
   if (ok && pttEma > 0 && fabs(ptt - pttEma) > 0.25f * pttEma) ok = false;
-  if (!ok) { if (pttEma == 0 && rr >= RR_MIN_MS && rr <= RR_MAX_MS) pttEma = ptt; return; }
+  if (!ok) {
+    if (pttEma == 0 && rr >= RR_MIN_MS && rr <= RR_MAX_MS) pttEma = ptt;
+    rrPrev = 0;   // RMSSD needs back-to-back intervals: don't difference across a rejected beat
+    return;
+  }
 
   goodBeats++;
   pttEma = pttEma == 0 ? ptt : 0.85f * pttEma + 0.15f * ptt;
