@@ -1,0 +1,15 @@
+name: simulation
+on: [push, pull_request]
+jobs:
+  reproduce:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r sim/requirements.txt
+      # The simulation is seeded, so it must reproduce the published numbers exactly.
+      # (Figures are not compared: PNG bytes vary with the matplotlib version.)
+      - run: cd sim && python seismopulse_sim.py > /dev/null
+      - run: git diff --exit-code docs/results.json
