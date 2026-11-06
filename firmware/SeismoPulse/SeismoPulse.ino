@@ -65,8 +65,11 @@ void mpuWrite(uint8_t reg, uint8_t v) {
 int16_t mpuReadAz() {
   Wire.beginTransmission(MPU_ADDR); Wire.write(0x3F); Wire.endTransmission(false);
   Wire.requestFrom(MPU_ADDR, (uint8_t)2);
-  int16_t v = (Wire.read() << 8) | Wire.read();
-  return v;
+  // Two statements on purpose: C++ doesn't fix the order in which the operands
+  // of `(read() << 8) | read()` are evaluated, so the bytes could swap.
+  uint8_t hi = Wire.read();
+  uint8_t lo = Wire.read();
+  return (int16_t)(((uint16_t)hi << 8) | lo);
 }
 void mpuInit() {
   mpuWrite(0x6B, 0x00);   // wake up
