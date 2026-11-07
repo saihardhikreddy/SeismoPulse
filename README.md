@@ -128,7 +128,7 @@ Firmware: open `firmware/SeismoPulse/SeismoPulse.ino` in the Arduino IDE (board 
 
 1. Tape the MPU-6050 flat on the lower sternum (Z axis into the chest) and clip the pulse sensor on the index finger. Sit still and breathe normally.
 2. Watch `PTT_ms` stabilise (SQI > 80 %). Take a cuff reading and type `C<sys>/<dia>`.
-3. Do 2 minutes of mental arithmetic or 30 squats, take a second cuff reading, and type `C<sys>/<dia>` again (two-point calibration).
+3. Do 2 minutes of mental arithmetic or 30 squats, take a second cuff reading, and type `C<sys>/<dia>` again (two-point calibration). If PTT has changed by less than about 3 %, the firmware says so and keeps the one-point slope.
 4. Repeat the stress task and compare the SeismoPulse MAP trend with fresh cuff readings.
 
 ## 8. Impact, limitations and safety

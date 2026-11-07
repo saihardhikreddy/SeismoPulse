@@ -92,6 +92,11 @@ void handleSerial() {
   if (haveCal1 && fabs(lnP - cal1Ln) > 0.03f) {    // two-point: fit slope
     calB = (map_ - cal1Map) / (lnP - cal1Ln);
     calB = constrain(calB, -150.0f, -10.0f);
+  } else if (haveCal1) {
+    // PTT changed by under ~3 %, too little to fit a slope from: say so, rather than letting
+    // a second reading look like a successful two-point calibration.
+    Serial.println(F("# PTT barely changed since the last reading: kept the old slope (one-point)."));
+    Serial.println(F("# For two-point, raise the BP more (exercise) before the second cuff reading."));
   }
   calA = map_ - calB * lnP;
   cal1Ln = lnP; cal1Map = map_; haveCal1 = true; calibrated = true;
