@@ -125,7 +125,9 @@ void onBeat(uint32_t footIdx) {
   bool ok = rr >= RR_MIN_MS && rr <= RR_MAX_MS && ptt > PTT_MIN_MS && ptt < PTT_MAX_MS;
   if (ok && pttEma > 0 && fabs(ptt - pttEma) > 0.25f * pttEma) ok = false;
   if (!ok) {
-    if (pttEma == 0 && rr >= RR_MIN_MS && rr <= RR_MAX_MS) pttEma = ptt;
+    // Seed the average only from a plausible beat (as sim/seismopulse_sim.py does): a PTT stuck on
+    // the edge of the search window means the SCG had no clear peak, and would anchor the EMA there.
+    if (pttEma == 0 && rr >= RR_MIN_MS && rr <= RR_MAX_MS && ptt > PTT_MIN_MS && ptt < PTT_MAX_MS) pttEma = ptt;
     rrPrev = 0;   // RMSSD needs back-to-back intervals: don't difference across a rejected beat
     return;
   }
