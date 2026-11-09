@@ -108,6 +108,7 @@ It then runs a **port of the firmware pipeline**. A conventional **ECG-style PAT
 | PTT jitter (SD, after constant offset) | 3.9 ms | n/a |
 | MAP MAE, **two-point** calibration | **2.88 mmHg** | 3.44 mmHg |
 | MAP error SD, two-point | **2.26 mmHg** | 2.38 mmHg |
+| 95 % limits of agreement, two-point | −1.7 to +7.1 mmHg | −1.3 to +8.0 mmHg |
 | MAP MAE, one-point (population slope) | 4.23 mmHg | 3.60 mmHg |
 | Correlation with true MAP | 0.961 | 0.956 |
 

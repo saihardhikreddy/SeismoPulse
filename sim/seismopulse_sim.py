@@ -144,7 +144,11 @@ def truth_at(tt, arr): return np.interp(tt, t, arr)
 
 def calibrate(est, cal_t, two_point, b_pop=-55.0):
     lnp = np.log(est[:, 1]); tt = est[:, 0]
-    def ln_at(c): m = (tt > c - 20) & (tt < c); return lnp[m].mean()
+    def ln_at(c):
+        m = (tt > c - 20) & (tt < c)
+        if not m.any():   # an empty window would silently turn every estimate into NaN
+            raise ValueError(f"no accepted beats in the 20 s before the cuff reading at t={c:.0f} s")
+        return lnp[m].mean()
     m1 = truth_at(cal_t[0], MAP); l1 = ln_at(cal_t[0])
     b = b_pop
     if two_point:
@@ -164,7 +168,10 @@ for name, est, sqi in (("SeismoPulse_SCG_PTT", est_scg, sqi_scg), ("ECG_style_PA
         res[f"{name}/{mode}"] = dict(MAE_mmHg=round(float(np.mean(np.abs(err))), 2),
                                      bias=round(float(err.mean()), 2), SD=round(float(err.std()), 2),
                                      r=round(float(np.corrcoef(mapE[ev], mt[ev])[0, 1]), 3),
-                                     slope_b=round(float(b), 1))
+                                     slope_b=round(float(b), 1),
+                                     # Bland-Altman 95 % limits of agreement (bias +/- 1.96 SD)
+                                     LoA_mmHg=[round(float(err.mean() - 1.96 * err.std()), 2),
+                                               round(float(err.mean() + 1.96 * err.std()), 2)])
         if name.startswith("Seismo") and mode == "two_point": best = (tt, mapE, mt, ev)
 # AO timing accuracy
 ao_err = []
@@ -179,7 +186,8 @@ res["PTT_jitter_ms_SD_after_offset"] = round(float(np.std(ao_err[np.abs(ao_err -
 res["PEP_range_ms"] = [round(float(PEP.min() * 1000), 1), round(float(PEP.max() * 1000), 1)]
 res["MAP_range_true"] = [round(float(MAP.min()), 1), round(float(MAP.max()), 1)]
 print(json.dumps(res, indent=1))
-json.dump(res, open(os.path.join(OUT, "results.json"), "w"), indent=1)
+with open(os.path.join(OUT, "results.json"), "w") as f:
+    json.dump(res, f, indent=1)
 
 # ---------------- figures ----------------
 plt.rcParams.update({"font.size": 9})
