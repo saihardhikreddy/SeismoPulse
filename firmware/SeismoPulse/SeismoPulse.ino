@@ -50,7 +50,9 @@ int32_t  peakSlope = 0; uint32_t peakSlopeIdx = 0; int32_t peakSlopeVal = 0;
 
 // beat outputs
 float pttEma = 0, hrEma = 0, rrPrev = 0, rmssdAcc = 0; uint16_t rmssdN = 0;
-uint16_t goodBeats = 0, totalBeats = 0;
+// 32-bit: at 70 bpm a 16-bit count wraps after about 15.6 hours, and since the two counters wrap
+// at different times the SQI column then read over 100 % (or divided by zero on the wrap beat).
+uint32_t goodBeats = 0, totalBeats = 0;
 
 // calibration: MAP = a + b * ln(PTT_ms)
 float calA = 0, calB = -55.0f;                     // population slope (mmHg per ln-unit)
