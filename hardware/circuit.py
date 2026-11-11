@@ -1,3 +1,9 @@
+"""Draws the wiring diagram, hardware/circuit.png, next to this script.
+
+    python hardware/circuit.py
+"""
+from pathlib import Path
+
 import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch
@@ -28,4 +34,6 @@ for x, c, t in ((6.0, "#d62728", "5 V"), (7.0, "#222", "GND"), (8.0, "#1f77b4", 
     ax.text(x, 9.9, t, color=c, ha="center", fontsize=9, weight="bold")
 ax.text(0.2, 0.1, "No discrete parts needed: MPU-6050 module has its own 3.3 V regulator + I²C pull-ups (5 V tolerant on the Nano);\n"
         "pulse sensor has its own LED driver + amplifier. 7 jumper wires on one half breadboard.", fontsize=8.5)
-fig.tight_layout(); fig.savefig("/tmp/sp/hardware/circuit.png", dpi=190)
+out = Path(__file__).resolve().parent / "circuit.png"  # was a path on the machine it was first drawn on
+fig.tight_layout(); fig.savefig(out, dpi=190)
+print(f"wrote {out}")
