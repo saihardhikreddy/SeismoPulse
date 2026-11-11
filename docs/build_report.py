@@ -4,7 +4,7 @@
 """
 import markdown, pathlib
 root = pathlib.Path(__file__).resolve().parent.parent
-md = (root / "README.md").read_text(encoding="utf-8")  # it has °, ², µ: not cp1252-safe
+md = (root / "README.md").read_text(encoding="utf-8")  # it has ₹, − and →, which cp1252 lacks
 html = markdown.markdown(md, extensions=["tables", "fenced_code"])
 css = """@page{size:A4;margin:14mm}body{font-family:'DejaVu Sans',Arial,sans-serif;font-size:9.8pt;line-height:1.45;color:#1d1d1f}
 h1{font-size:22pt;color:#1f6f8b;margin:0 0 4px}h2{font-size:12.5pt;color:#1f6f8b;border-bottom:1px solid #d6e4ea;margin:14px 0 5px;page-break-after:avoid}
