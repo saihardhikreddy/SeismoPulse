@@ -160,6 +160,11 @@ void onBeat(uint32_t footIdx) {
 
 void setup() {
   Serial.begin(115200);
+  // parseInt() waits this long for digits that haven't arrived. At the default 1 s, a stray
+  // "C" (or a line cut short) stopped sampling for 2 s, and loop() then raced through the
+  // missed samples back to back, squeezing 2 s of signal into a burst. A whole "C120/80" line
+  // takes under 1 ms at 115200 baud, so 20 ms is plenty.
+  Serial.setTimeout(20);
   pinMode(LED_PIN, OUTPUT);
   Wire.begin(); Wire.setClock(400000);
   mpuInit();
