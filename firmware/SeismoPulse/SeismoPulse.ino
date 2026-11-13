@@ -38,7 +38,7 @@ int16_t  scgBuf[BUF_N];
 uint16_t bufHead = 0;
 uint32_t nextUs, sampleIdx = 0;
 
-// SCG band-pass (1st-order HP 5 Hz + 1st-order LP 40 Hz), fixed-point
+// SCG band-pass (1st-order HP ~5 Hz + 1st-order LP ~58 Hz, -3 dB points at 500 Hz), fixed-point
 int32_t hpPrevIn = 0, hpOut = 0, lpOut = 0;
 
 // PPG processing
@@ -181,11 +181,11 @@ void loop() {
   nextUs += TS_US;
   sampleIdx++;
 
-  // ---- SCG: band-pass 5..40 Hz on accel Z ----
+  // ---- SCG: band-pass ~5..58 Hz on accel Z ----
   int32_t az = mpuReadAz();
   hpOut = ((hpOut * 15) >> 4) + az - hpPrevIn;     // HP, a = 0.9375 (~5 Hz @500 Hz)
   hpPrevIn = az;
-  lpOut += ((hpOut - lpOut) * 2) >> 2;             // LP, ~40 Hz
+  lpOut += ((hpOut - lpOut) * 2) >> 2;             // LP, a = 0.5 (-3 dB at ~58 Hz @500 Hz)
   scgBuf[bufHead] = (int16_t)constrain(lpOut, -32767, 32767);
   bufHead = (bufHead + 1) % BUF_N;
 

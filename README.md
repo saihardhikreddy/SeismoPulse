@@ -20,7 +20,7 @@ Most cheap "cuffless" devices time the pulse from the **ECG R-peak** (pulse *arr
 
 ## 2. Concept: what it does and whom it benefits
 
-- An MPU-6050 is taped to the sternum and sampled at 500 Hz. The Nano extracts the **aortic-opening (AO) peak** of every heartbeat from the band-passed (5–40 Hz) chest acceleration.
+- An MPU-6050 is taped to the sternum and sampled at 500 Hz. The Nano extracts the **aortic-opening (AO) peak** of every heartbeat from the band-passed (about 5–58 Hz) chest acceleration.
 - The pulse sensor on the fingertip gives the **PPG foot**, detected with the *intersecting-tangent* method used in arterial-stiffness research.
 - **PTT = PPG foot − AO.** This is the true vascular transit time, with PEP excluded by design.
 - **Calibration:** `MAP = a + b·ln(PTT)`, which follows from the Moens–Korteweg equation with exponential wall elasticity. Send `C120/80` over serial with a cuff reading. One reading fixes the offset (using a population slope); a second reading at a different BP level fits the personal slope.
@@ -74,7 +74,7 @@ Assumptions: whole bundles are charged at full listed price (only 7 of 30 jumper
 
 ```
 every 2 ms (500 Hz)
-  az  = MPU-6050 accel Z (±2 g, DLPF 94 Hz)  -> HP 5 Hz -> LP 40 Hz -> SCG ring buffer (300 samples)
+  az  = MPU-6050 accel Z (±2 g, DLPF 94 Hz)  -> HP 5 Hz -> LP 58 Hz -> SCG ring buffer (300 samples)
   ppg = analogRead(A0)                       -> LP ~10 Hz -> slope
 PPG beat: slope > adaptive threshold (40 % of recent max)  ... until slope <= 0
   amplitude gate (rejects noise); foot = intersecting tangent (max-slope line ∩ preceding minimum)
