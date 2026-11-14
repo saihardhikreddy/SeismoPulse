@@ -142,6 +142,9 @@ est_pat, sqi_pat = sqi_ema(beats_pat, 120, 500)
 
 def truth_at(tt, arr): return np.interp(tt, t, arr)
 
+CAL_MIN_LN_STEP = 0.03            # firmware: fabs(lnP - cal1Ln) > 0.03f
+CAL_SLOPE_RANGE = (-150.0, -10.0)  # firmware: constrain(calB, -150.0f, -10.0f)
+
 def calibrate(est, cal_t, two_point, b_pop=-55.0):
     lnp = np.log(est[:, 1]); tt = est[:, 0]
     def ln_at(c):
@@ -150,10 +153,15 @@ def calibrate(est, cal_t, two_point, b_pop=-55.0):
             raise ValueError(f"no accepted beats in the 20 s before the cuff reading at t={c:.0f} s")
         return lnp[m].mean()
     m1 = truth_at(cal_t[0], MAP); l1 = ln_at(cal_t[0])
-    b = b_pop
+    b = b_pop; a = m1 - b * l1
     if two_point:
-        m2 = truth_at(cal_t[1], MAP); l2 = ln_at(cal_t[1]); b = (m2 - m1) / (l2 - l1)
-    a = m1 - b * l1
+        # As handleSerial() in the firmware: fit a slope only when ln(PTT) moved by more than
+        # 0.03 between the readings (a near-zero step would blow the slope up), clamp it to the
+        # firmware's -150..-10 mmHg range, and anchor the offset on the newer reading.
+        m2 = truth_at(cal_t[1], MAP); l2 = ln_at(cal_t[1])
+        if abs(l2 - l1) > CAL_MIN_LN_STEP:
+            b = float(np.clip((m2 - m1) / (l2 - l1), *CAL_SLOPE_RANGE))
+        a = m2 - b * l2
     return a + b * lnp, a, b
 
 res = {}
