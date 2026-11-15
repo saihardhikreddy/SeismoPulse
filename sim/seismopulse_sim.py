@@ -93,12 +93,12 @@ def run_pipeline(az, adc, ref_times=None):
         a = int(az[n]); hp = ((hp * 15) >> 4) + a - prev; prev = a
         lp += ((hp - lp) * 2) >> 2; scg_f[n] = lp
     ppgLp = prevLp = int(adc[0]) << 4; ppgMin = 10 ** 9; rising = False; pk = pkI = pkV = 0
-    thr = 8; ampThr = 150; refr = 0; last_foot = 0
+    thr = 8; ampThr = 150; refr = 0; last_foot = None   # None: no beat yet, so no RR interval
     out = []
     for n in range(N):
         raw = int(adc[n]) << 4; ppgLp += (raw - ppgLp) >> 3
         sl = ppgLp - prevLp; prevLp = ppgLp
-        if n - max(last_foot, refr) > 2 * FS: thr, ampThr = 8, 150   # lost lock -> reset thresholds
+        if n - max(last_foot or 0, refr) > 2 * FS: thr, ampThr = 8, 150   # lost lock -> reset thresholds
         if not rising and ppgLp < ppgMin: ppgMin = ppgLp
         if n > refr and sl > thr:
             rising = True
@@ -110,7 +110,8 @@ def run_pipeline(az, adc, ref_times=None):
                 foot = pkI - int(np.clip(dt, 0, 50))
                 thr = max(4, (thr * 3 + (min(pk, 3 * thr) * 2) // 5) >> 2)
                 ampThr = max(60, (ampThr * 3 + (min(amp, 3 * ampThr) * 2) // 5) >> 2)
-                rr = (foot - last_foot) * 2; last_foot = foot
+                # as the firmware: the first beat has no previous foot, so its RR is 0 (rejected)
+                rr = (foot - last_foot) * 2 if last_foot is not None else 0; last_foot = foot
                 if ref_times is None:
                     lo, hi = foot - 175, foot - 30
                     if lo > 0:

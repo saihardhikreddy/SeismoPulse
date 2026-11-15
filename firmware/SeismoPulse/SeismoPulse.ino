@@ -45,6 +45,7 @@ int32_t hpPrevIn = 0, hpOut = 0, lpOut = 0;
 int32_t ppgLp = 0, ppgPrevLp = 0, slopeThr = 8, ampThr = 150;
 int32_t ppgMin = 0x7FFFFFFF; uint32_t ppgMinIdx = 0;
 uint32_t lastFootIdx = 0, refractUntil = 0;
+bool     haveFoot = false;   // no beat yet, so the first one has no RR interval
 bool     rising = false;
 int32_t  peakSlope = 0; uint32_t peakSlopeIdx = 0; int32_t peakSlopeVal = 0;
 
@@ -109,8 +110,11 @@ void handleSerial() {
 // ---------------- beat processing ----------------
 void onBeat(uint32_t footIdx) {
   totalBeats++;
-  uint32_t rr = (footIdx - lastFootIdx) * (1000 / FS);
-  lastFootIdx = footIdx;
+  // The first beat has no previous foot: footIdx - 0 is the time since power-up, which landed in
+  // the 330..1500 ms RR range whenever the first foot came within 1.5 s, and then seeded HR (and
+  // the first RMSSD difference) with a made-up interval. RR = 0 fails the range check instead.
+  uint32_t rr = haveFoot ? (footIdx - lastFootIdx) * (1000 / FS) : 0;
+  lastFootIdx = footIdx; haveFoot = true;
 
   // search SCG history for aortic-opening (AO) peak in [foot-350 ms, foot-60 ms]
   // (SCG band-pass and PPG low-pass delays are constant -> absorbed by calibration)

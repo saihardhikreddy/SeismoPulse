@@ -45,7 +45,7 @@
  },
  "beats_true": 2287,
  "beats_detected": 2318,
- "SQI_pass_rate": 0.979,
+ "SQI_pass_rate": 0.978,
  "PTT_constant_offset_ms": 39.1,
  "PTT_jitter_ms_SD_after_offset": 3.87,
  "PEP_range_ms": [
