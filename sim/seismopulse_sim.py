@@ -124,14 +124,24 @@ def run_pipeline(az, adc, ref_times=None):
             rising = False; pk = 0; ppgMin = 10 ** 9
     return np.array(out), scg_f
 
+REJECTS_TO_RESEED = 8   # firmware: REJECTS_TO_RESEED
+
 def sqi_ema(beats, lo, hi):
-    ema = 0; res = []; good = 0
+    ema = 0; res = []; good = 0; streak = 0
     for (tf, rr, p) in beats:
-        ok = 330 <= rr <= 1500 and lo < p < hi
-        if ok and ema > 0 and abs(p - ema) > 0.25 * ema: ok = False
+        plausible = 330 <= rr <= 1500 and lo < p < hi
+        ok = plausible
+        if ok and ema > 0 and abs(p - ema) > 0.25 * ema:
+            # As the firmware: a run of plausible beats that all disagree with the average means
+            # the average is what's wrong (seeded from a bad beat, or PTT moved while the signal
+            # was lost), so restart it from this beat instead of rejecting every beat from now on.
+            streak += 1
+            if streak >= REJECTS_TO_RESEED: ema = 0; streak = 0
+            ok = False
         if not ok:
-            if ema == 0 and 330 <= rr <= 1500 and lo < p < hi: ema = p
+            if ema == 0 and plausible: ema = p
             continue
+        streak = 0
         good += 1; ema = p if ema == 0 else 0.85 * ema + 0.15 * p
         res.append((tf, ema))
     return np.array(res), good / max(1, len(beats))

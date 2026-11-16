@@ -32,6 +32,7 @@ const uint16_t BUF_N        = 300;                 // 600 ms SCG history (int16 
 const uint16_t PTT_MIN_MS   = 60,  PTT_MAX_MS = 350;
 const uint16_t RR_MIN_MS    = 330, RR_MAX_MS  = 1500;   // 40..180 bpm
 const float    PULSE_PRESS  = 40.0f;               // default SBP-DBP until calibrated
+const uint8_t  REJECTS_TO_RESEED = 8;              // plausible beats in a row that disagree with pttEma
 
 // ---------------- state ----------------
 int16_t  scgBuf[BUF_N];
@@ -51,6 +52,7 @@ int32_t  peakSlope = 0; uint32_t peakSlopeIdx = 0; int32_t peakSlopeVal = 0;
 
 // beat outputs
 float pttEma = 0, hrEma = 0, rrPrev = 0, rmssdAcc = 0; uint16_t rmssdN = 0;
+uint8_t rejectStreak = 0;
 // 32-bit: at 70 bpm a 16-bit count wraps after about 15.6 hours, and since the two counters wrap
 // at different times the SQI column then read over 100 % (or divided by zero on the wrap beat).
 uint32_t goodBeats = 0, totalBeats = 0;
@@ -128,17 +130,26 @@ void onBeat(uint32_t footIdx) {
   float ptt = bestK * (1000.0f / FS);
 
   // signal-quality index: physiological ranges + beat-to-beat consistency
-  bool ok = rr >= RR_MIN_MS && rr <= RR_MAX_MS && ptt > PTT_MIN_MS && ptt < PTT_MAX_MS;
-  if (ok && pttEma > 0 && fabs(ptt - pttEma) > 0.25f * pttEma) ok = false;
+  bool plausible = rr >= RR_MIN_MS && rr <= RR_MAX_MS && ptt > PTT_MIN_MS && ptt < PTT_MAX_MS;
+  bool ok = plausible;
+  if (ok && pttEma > 0 && fabs(ptt - pttEma) > 0.25f * pttEma) {
+    // pttEma only moves on accepted beats, so once it was wrong (seeded from a beat whose SCG
+    // peak was the wrong wave, or PTT moved while the sensor was off) every real beat was
+    // rejected from then on and SQI sank to 0 %. After a run of plausible beats that all
+    // disagree with it, restart the average from the current beat.
+    if (++rejectStreak >= REJECTS_TO_RESEED) { pttEma = 0; rejectStreak = 0; }
+    ok = false;
+  }
   if (!ok) {
     // Seed the average only from a plausible beat (as sim/seismopulse_sim.py does): a PTT stuck on
     // the edge of the search window means the SCG had no clear peak, and would anchor the EMA there.
-    if (pttEma == 0 && rr >= RR_MIN_MS && rr <= RR_MAX_MS && ptt > PTT_MIN_MS && ptt < PTT_MAX_MS) pttEma = ptt;
+    if (pttEma == 0 && plausible) pttEma = ptt;
     rrPrev = 0;   // RMSSD needs back-to-back intervals: don't difference across a rejected beat
     return;
   }
 
   goodBeats++;
+  rejectStreak = 0;
   pttEma = pttEma == 0 ? ptt : 0.85f * pttEma + 0.15f * ptt;
   float hr = 60000.0f / rr;
   hrEma = hrEma == 0 ? hr : 0.8f * hrEma + 0.2f * hr;

@@ -80,7 +80,7 @@ PPG beat: slope > adaptive threshold (40 % of recent max)  ... until slope <= 0
   amplitude gate (rejects noise); foot = intersecting tangent (max-slope line ∩ preceding minimum)
   AO   = argmax SCG in [foot − 350 ms, foot − 60 ms]
   PTT  = foot − AO
-  SQI  : RR 330–1500 ms, PTT 60–350 ms, |PTT − EMA| < 25 %
+  SQI  : RR 330–1500 ms, PTT 60–350 ms, |PTT − EMA| < 25 % (8 plausible beats in a row outside it restart the EMA)
   EMA  : PTT (α 0.15), HR (α 0.2); RMSSD over 30 beats
   MAP  = a + b·ln(PTT);  SYS = MAP + 2PP/3,  DIA = MAP − PP/3  (PP from the cuff calibration)
   thresholds auto-reset after 2 s without a beat (artefact recovery)
