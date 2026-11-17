@@ -53,6 +53,7 @@ int32_t  peakSlope = 0; uint32_t peakSlopeIdx = 0; int32_t peakSlopeVal = 0;
 // beat outputs
 float pttEma = 0, hrEma = 0, rrPrev = 0, rmssdAcc = 0; uint16_t rmssdN = 0;
 uint8_t rejectStreak = 0;
+uint32_t ledOffIdx = 0;      // sample at which the beat LED goes off again
 // 32-bit: at 70 bpm a 16-bit count wraps after about 15.6 hours, and since the two counters wrap
 // at different times the SQI column then read over 100 % (or divided by zero on the wrap beat).
 uint32_t goodBeats = 0, totalBeats = 0;
@@ -171,6 +172,7 @@ void onBeat(uint32_t footIdx) {
     rmssdAcc = 0; rmssdN = 0;
   }
   digitalWrite(LED_PIN, HIGH);
+  ledOffIdx = sampleIdx + 30;   // 60 ms flash
 }
 
 void setup() {
@@ -228,5 +230,8 @@ void loop() {
     }
     rising = false; peakSlope = 0; ppgMin = 0x7FFFFFFF;
   }
-  if (sampleIdx - lastFootIdx > 30) digitalWrite(LED_PIN, LOW);
+  // Timed from the beat being accepted, not from its foot: the foot is found only at the pulse
+  // peak, usually more than 30 samples later, so the LED used to go off in the same pass it
+  // came on and the beat flash was never visible.
+  if ((int32_t)(sampleIdx - ledOffIdx) >= 0) digitalWrite(LED_PIN, LOW);
 }
