@@ -12,4 +12,7 @@ h3{font-size:10.5pt;page-break-after:avoid}table{border-collapse:collapse;width:
 th,td{border:1px solid #c9d3d8;padding:3px 6px;text-align:left}th{background:#eef4f7}img{max-width:100%;display:block;margin:6px auto;page-break-inside:avoid}
 pre{background:#f6f6f6;border:1px solid #ddd;padding:6px;font-size:8pt;white-space:pre-wrap;page-break-inside:avoid}code{font-size:8.5pt}
 blockquote{background:#f3f8fa;border-left:4px solid #1f6f8b;margin:6px 0;padding:4px 10px}"""
-(root / "docs" / "report.html").write_text(f"<!doctype html><html><head><meta charset='utf-8'><title>SeismoPulse report</title><style>{css}</style></head><body>{html}</body></html>", encoding="utf-8")
+# README's image paths are relative to the repo root (docs/fig_*.png, hardware/circuit.png), but
+# the report is written into docs/, so every figure came out as a broken image. <base> points the
+# page's relative links back at the root.
+(root / "docs" / "report.html").write_text(f"<!doctype html><html><head><meta charset='utf-8'><base href='../'><title>SeismoPulse report</title><style>{css}</style></head><body>{html}</body></html>", encoding="utf-8")
