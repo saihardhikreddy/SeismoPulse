@@ -98,7 +98,10 @@ def run_pipeline(az, adc, ref_times=None):
     for n in range(N):
         raw = int(adc[n]) << 4; ppgLp += (raw - ppgLp) >> 3
         sl = ppgLp - prevLp; prevLp = ppgLp
-        if n - max(last_foot or 0, refr) > 2 * FS: thr, ampThr = 8, 150   # lost lock -> reset thresholds
+        # lost lock -> reset thresholds. As the firmware: 2 s since the last foot, once out of the
+        # refractory period (this used to count from the end of the refractory period instead,
+        # about 0.35 s later than the firmware does)
+        if n > refr and n - (last_foot or 0) > 2 * FS: thr, ampThr = 8, 150
         if not rising and ppgLp < ppgMin: ppgMin = ppgLp
         if n > refr and sl > thr:
             rising = True
@@ -113,9 +116,12 @@ def run_pipeline(az, adc, ref_times=None):
                 # as the firmware: the first beat has no previous foot, so its RR is 0 (rejected)
                 rr = (foot - last_foot) * 2 if last_foot is not None else 0; last_foot = foot
                 if ref_times is None:
-                    lo, hi = foot - 175, foot - 30
+                    # As onBeat(): look back 30..174 samples (60..348 ms) from the foot, nearest
+                    # sample first, keeping the first maximum on a tie (was 31..175, farthest first)
+                    lo, hi = foot - 174, foot - 30
                     if lo > 0:
-                        k = lo + int(np.argmax(scg_f[lo:hi])); ptt = (foot - k) * 2.0
+                        win = scg_f[lo:hi + 1][::-1]
+                        k = hi - int(np.argmax(win)); ptt = (foot - k) * 2.0
                         out.append((foot / FS, rr, ptt))
                 else:
                     prior = ref_times[ref_times * FS < foot - 30]

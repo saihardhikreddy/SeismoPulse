@@ -104,11 +104,11 @@ It then runs a **port of the firmware pipeline**. A conventional **ECG-style PAT
 | Metric (30 min, 2287 beats) | SeismoPulse (SCG→PPG PTT) | ECG-style PAT |
 |---|---:|---:|
 | Beats detected / true | 2318 / 2287 | same PPG |
-| SQI pass rate | 97.8 % | n/a |
+| SQI pass rate | 97.9 % | n/a |
 | PTT jitter (SD, after constant offset) | 3.9 ms | n/a |
-| MAP MAE, **two-point** calibration | **2.88 mmHg** | 3.44 mmHg |
+| MAP MAE, **two-point** calibration | **2.87 mmHg** | 3.44 mmHg |
 | MAP error SD, two-point | **2.26 mmHg** | 2.38 mmHg |
-| 95 % limits of agreement, two-point | −1.7 to +7.1 mmHg | −1.3 to +8.0 mmHg |
+| 95 % limits of agreement, two-point | −1.8 to +7.1 mmHg | −1.3 to +8.0 mmHg |
 | MAP MAE, one-point (population slope) | 4.23 mmHg | 3.60 mmHg |
 | Correlation with true MAP | 0.961 | 0.956 |
 
