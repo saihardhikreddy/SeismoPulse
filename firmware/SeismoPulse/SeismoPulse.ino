@@ -33,6 +33,7 @@ const uint16_t PTT_MIN_MS   = 60,  PTT_MAX_MS = 350;
 const uint16_t RR_MIN_MS    = 330, RR_MAX_MS  = 1500;   // 40..180 bpm
 const float    PULSE_PRESS  = 40.0f;               // default SBP-DBP until calibrated
 const uint8_t  REJECTS_TO_RESEED = 8;              // plausible beats in a row that disagree with pttEma
+const uint8_t  CAL_MIN_GOOD = 5;                   // accepted beats in a row before a cuff reading is taken
 
 // ---------------- state ----------------
 int16_t  scgBuf[BUF_N];
@@ -53,6 +54,8 @@ int32_t  peakSlope = 0; uint32_t peakSlopeIdx = 0; int32_t peakSlopeVal = 0;
 // beat outputs
 float pttEma = 0, hrEma = 0, rrPrev = 0, rmssdAcc = 0; uint16_t rmssdN = 0;
 uint8_t rejectStreak = 0;
+uint8_t goodRun = 0;         // accepted beats in a row (capped at 255)
+uint32_t lastGoodIdx = 0;    // sample of the last accepted beat
 uint32_t ledOffIdx = 0;      // sample at which the beat LED goes off again
 // 32-bit: at 70 bpm a 16-bit count wraps after about 15.6 hours, and since the two counters wrap
 // at different times the SQI column then read over 100 % (or divided by zero on the wrap beat).
@@ -93,6 +96,13 @@ void handleSerial() {
   if (sbp < 70 || sbp > 220 || dbp < 40 || dbp >= sbp || pttEma <= 0) {
     Serial.println(F("# calibration rejected (need stable PTT and C<sys>/<dia>)")); return;
   }
+  // pttEma keeps its last value while no beats are accepted, so with the pulse sensor slipped off
+  // (or the SCG lost to talking) a fresh cuff reading was paired with a PTT from minutes earlier
+  // and the calibration offset came out wrong. Ask for a run of current, accepted beats first.
+  if (goodRun < CAL_MIN_GOOD || sampleIdx - lastGoodIdx > 2UL * FS) {
+    Serial.println(F("# calibration rejected: wait for 5 good beats in a row (sit still, check both sensors)"));
+    return;
+  }
   float map_ = dbp + (sbp - dbp) / 3.0f, lnP = log(pttEma);
   pulsePress = sbp - dbp;
   if (haveCal1 && fabs(lnP - cal1Ln) > 0.03f) {    // two-point: fit slope
@@ -127,7 +137,7 @@ void onBeat(uint32_t footIdx) {
     int16_t v = scgBuf[(bufHead + BUF_N - 1 - lagSamples - k) % BUF_N];
     if (v > best) { best = v; bestK = k; }
   }
-  if (bestK < 0) { rrPrev = 0; return; }
+  if (bestK < 0) { rrPrev = 0; goodRun = 0; return; }
   float ptt = bestK * (1000.0f / FS);
 
   // signal-quality index: physiological ranges + beat-to-beat consistency
@@ -146,11 +156,14 @@ void onBeat(uint32_t footIdx) {
     // the edge of the search window means the SCG had no clear peak, and would anchor the EMA there.
     if (pttEma == 0 && plausible) pttEma = ptt;
     rrPrev = 0;   // RMSSD needs back-to-back intervals: don't difference across a rejected beat
+    goodRun = 0;
     return;
   }
 
   goodBeats++;
   rejectStreak = 0;
+  if (goodRun < 255) goodRun++;
+  lastGoodIdx = sampleIdx;
   pttEma = pttEma == 0 ? ptt : 0.85f * pttEma + 0.15f * ptt;
   float hr = 60000.0f / rr;
   hrEma = hrEma == 0 ? hr : 0.8f * hrEma + 0.2f * hr;
